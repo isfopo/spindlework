@@ -1,4 +1,4 @@
-import { RepositoryBase } from "@spindle/spindle/thread";
+import { RepositoryBase } from "spindle/thread";
 import type { VoteRow, VoteChoice } from "./model";
 import { procs, type ProcMap } from "./procs.generated";
 

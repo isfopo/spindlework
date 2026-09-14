@@ -1,5 +1,5 @@
 {
-  "name": "@spindle/spindle",
+  "name": "spindle",
   "version": "0.0.0",
   "private": false,
   "type": "module",
@@ -14,8 +14,8 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/fiber/index.d.mts",
-      "import": "./dist/fiber/index.mjs"
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
     },
     "./fiber": {
       "types": "./dist/fiber/index.d.mts",

@@ -1,6 +1,6 @@
 import { Context, Env } from "hono";
-import { Get, Post, ControllerBase, Render } from "@spindle/spindle/thread";
-import { Exists, Validate } from "@spindle/spindle/thread";
+import { Get, Post, ControllerBase, Render } from "spindle/thread";
+import { Exists, Validate } from "spindle/thread";
 import { Layout } from "views/routes/Shared/Layout";
 import { handleError } from "error-handler";
 import { requireAuth } from "middleware/auth";

@@ -21,7 +21,7 @@
  *   </Dismiss.Trigger>
  */
 
-import { BaseHandler } from "@spindle/spindle/fabric";
+import { BaseHandler } from "spindle/fabric";
 
 export class DismissHandler extends BaseHandler {
   override connect(): void {

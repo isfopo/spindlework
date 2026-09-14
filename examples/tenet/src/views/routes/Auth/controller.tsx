@@ -1,5 +1,5 @@
 import { Context, Env } from "hono";
-import { Get, Post, ControllerBase } from "@spindle/spindle/thread";
+import { Get, Post, ControllerBase } from "spindle/thread";
 import { Layout } from "views/routes/Shared/Layout";
 import { handleError } from "error-handler";
 import { buildAuthorizeUrl, exchangeCode, fetchUser } from "./github";

@@ -12,7 +12,7 @@
  * at runtime, since most SQL drivers only support positional binding.
  */
 
-import type { Database, DbResult } from "@spindle/spindle/fiber";
+import type { Database, DbResult } from "spindle/fiber";
 
 export abstract class RepositoryBase<
   T extends { id: number },
