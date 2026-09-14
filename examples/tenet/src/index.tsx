@@ -1,13 +1,13 @@
 import { Hono } from "hono";
-import { parseBody } from "@spindle/spindle/thread";
+import { parseBody } from "spindle/thread";
 
 import TenetsController from "views/routes/Tenets/controller";
 import TenetsApiController from "views/routes/Tenets/controller.api";
 import WellKnownController from "views/routes/WellKnown/controller";
 import AuthController from "views/routes/Auth/controller";
 
-import { applySchema } from "@spindle/spindle/fiber";
-import { applySeed } from "@spindle/spindle/fiber";
+import { applySchema } from "spindle/fiber";
+import { applySeed } from "spindle/fiber";
 import { schemaDef } from "./.generated/schema";
 import { seedDef } from "./.generated/seed";
 

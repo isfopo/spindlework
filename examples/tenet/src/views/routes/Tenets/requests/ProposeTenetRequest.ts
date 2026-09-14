@@ -1,4 +1,4 @@
-import { RequestGuard, type ValidationResult } from "@spindle/spindle/thread"
+import { RequestGuard, type ValidationResult } from "spindle/thread"
 
 export interface OptionInput {
   title: string;

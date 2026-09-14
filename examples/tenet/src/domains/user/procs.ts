@@ -2,7 +2,7 @@
  * User stored queries — compiled once by fiberPlugin into static SQL with
  * schema-derived types (procs.generated.ts).
  */
-import { defineSql } from "@spindle/spindle/fiber";
+import { defineSql } from "spindle/fiber";
 import type { Database } from "domains/db-types";
 
 const { def, action, param, sql } = defineSql<Database>();

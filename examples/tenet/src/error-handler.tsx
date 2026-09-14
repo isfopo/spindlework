@@ -8,7 +8,7 @@ import {
   ConflictError,
   RateLimitError,
   ServerError,
-} from "@spindle/spindle/thread";
+} from "spindle/thread";
 import { ResultsView } from "views/routes/Shared/Results";
 
 export function handleError(

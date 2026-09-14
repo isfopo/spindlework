@@ -9,8 +9,8 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { env } from "cloudflare:workers";
-import { applySchema } from "@spindle/spindle/fiber";
-import { applySeed } from "@spindle/spindle/fiber";
+import { applySchema } from "spindle/fiber";
+import { applySeed } from "spindle/fiber";
 import { schemaDef } from "../../.generated/schema";
 import { seedDef } from "../../.generated/seed";
 import { tenetsRepo } from "./repo";

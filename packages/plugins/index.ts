@@ -1,7 +1,7 @@
 import type { Plugin } from "vite";
-import { fabricPlugin, FabricPluginOptions } from "fabric/plugins";
-import { fiberPlugin, FiberPluginOptions } from "fiber/plugins";
-import { ThreadPluginOptions, threadPlugin } from "thread/plugins";
+import { fabricPlugin, FabricPluginOptions } from "../fabric/plugins/index";
+import { fiberPlugin, FiberPluginOptions } from "../fiber/plugins/index";
+import { ThreadPluginOptions, threadPlugin } from "../thread/plugins/index";
 
 /** Options for the unified `spindlePlugin`, grouped by branch. */
 export interface SpindlePluginOptions {
@@ -28,6 +28,6 @@ export function spindlePlugin(options: SpindlePluginOptions = {}): Plugin[] {
   ];
 }
 
-export { fiberPlugin, type FiberPluginOptions } from "fiber/plugins";
-export { fabricPlugin, type FabricPluginOptions } from "fabric/plugins";
-export { threadPlugin, type ThreadPluginOptions } from "thread/plugins";
+export { fiberPlugin, type FiberPluginOptions } from "../fiber/plugins/index";
+export { fabricPlugin, type FabricPluginOptions } from "../fabric/plugins/index";
+export { threadPlugin, type ThreadPluginOptions } from "../thread/plugins/index";

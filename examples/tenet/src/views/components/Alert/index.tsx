@@ -1,6 +1,6 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
 import styles from "./index.module.css";
-import { useHandler } from "@spindle/spindle/fabric";
+import { useHandler } from "spindle/fabric";
 import { DismissHandler } from "views/handlers/DismissHandler";
 
 export type AlertVariant = "info" | "success" | "warning" | "error";

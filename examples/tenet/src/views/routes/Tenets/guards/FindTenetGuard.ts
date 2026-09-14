@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import type { IExistable } from "@spindle/spindle/thread";
+import type { IExistable } from "spindle/thread";
 import { tenetsRepo } from "domains/tenet/repo";
 
 export class FindTenetGuard implements IExistable {

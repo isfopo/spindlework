@@ -11,7 +11,7 @@
  * The event is prevented if the user cancels the confirm dialog.
  */
 
-import { BaseHandler } from "@spindle/spindle/fabric";
+import { BaseHandler } from "spindle/fabric";
 
 export class ConfirmHandler extends BaseHandler {
   override connect(): void {

@@ -1,5 +1,5 @@
 {
-  "name": "spindle",
+  "name": "spindle-workspace",
   "private": true,
   "workspaces": [
     "packages",

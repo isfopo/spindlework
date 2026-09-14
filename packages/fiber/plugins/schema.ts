@@ -18,7 +18,7 @@ import type { ResolvedFiberPaths } from "./options";
 
 /**
  * Load the app's schema module: bundle the TS source (resolving the
- * @spindle/spindle import to the framework DSL) and execute it for the
+ * spindle import to the framework DSL) and execute it for the
  * SchemaDef.
  */
 export async function loadSchemaModule(

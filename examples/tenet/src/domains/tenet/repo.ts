@@ -1,4 +1,4 @@
-import { RepositoryBase } from "@spindle/spindle/thread";
+import { RepositoryBase } from "spindle/thread";
 import { procs, type ProcMap } from "./procs.generated";
 import type { Tenet } from "domains/db-types";
 import type { TenetStatus } from "./model";
