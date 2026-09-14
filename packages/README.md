@@ -1,6 +1,6 @@
-# js-mvc
+# spindle
 
-MVC framework for Cloudflare Workers built on Hono with server-side JSX
+MVC framework for Cloudflare Workers built on Hono with server-side JSX. Organized into three branches — **fiber** (data), **thread** (domain), **fabric** (design) — each importable as its own subpath.
 
 ---
 
@@ -8,16 +8,33 @@ MVC framework for Cloudflare Workers built on Hono with server-side JSX
 
 - **Decorator-based routing** — Stage 3 TC39 decorators (`@Get`, `@Post`, etc.) on controller methods
 - **Guard pipeline** — `@Exists`, `@Authorize`, `@Validate` decorators run before handlers
-- **SQL repository layer** — Generic CRUD, dynamic finders, typed `.sql` file queries, injection-safe
+- **Repository layer** — Generic CRUD, dynamic finders, typed stored queries (`procs.ts`), injection-safe
+- **Schema & seed DSLs** — `defineSchema`/`table`/`col` and `defineSeed`/`generate` compiled at build time into typed modules
 - **Client-side handlers** — `useHandler()` factory wires server JSX to client controllers without manual attributes
 - **CSS-only interactivity** — `useHide()`/`useDisable()` factories generate scoped CSS rules for show/hide/disable based on form state
-- **Vite plugins** — SQL transform, SQL type generation, CSS build, client bundle
+- **Vite plugins** — one plugin per branch (`fiberPlugin`, `fabricPlugin`, `threadPlugin`) plus a unified `spindlePlugin`
 
 ---
 
 ## Installation
 
-Requires `hono` as a peer dependency.
+```bash
+npm install spindle
+```
+
+Requires `hono` (and `vite`/`wrangler` for the build tooling) as peer dependencies.
+
+---
+
+## Importing
+
+| Subpath | What it provides |
+|---|---|
+| `spindle` | Everything (root re-export) |
+| `spindle/fiber` | Schema/seed/procs DSL, `applySchema`, `applySeed`, `Database` types, SQL compiler |
+| `spindle/thread` | `ControllerBase`, `RepositoryBase`, `ServiceBase`, guards, errors, middleware |
+| `spindle/fabric` | `useHandler`, `BaseHandler`, `useHide`, `useDisable`, `useEvent`, hydration |
+| `spindle/plugins` | Vite plugins — `spindlePlugin`, `fiberPlugin`, `fabricPlugin`, `threadPlugin` |
 
 ---
 
@@ -26,32 +43,31 @@ Requires `hono` as a peer dependency.
 ### Controller
 
 ```ts
-import { ControllerBase, Get, Post } from "js-mvc/controller/ControllerBase"
-import { Exists, Validate } from "js-mvc/validation/decorators"
-import { parseRequestBody } from "js-mvc/validation"
-import { MyRequest } from "./requests"
+import { ControllerBase, Get, Post, Exists, Validate } from "spindle/thread";
+import { parseRequestBody } from "spindle/thread";
+import { MyRequest } from "./requests";
 
 class TenetsController extends ControllerBase {
-  override base = "/tenets"
+  override base = "tenets";
 
   @Get("/:slug")
   @Exists("tenet", (c) => repo(c.env.DB).findOneBy({ slug: c.req.param("slug")! }))
   async show(c) {
-    const tenet = c.get("tenet")
-    return c.render(<TenetView tenet={tenet} />)
+    const tenet = c.get("tenet");
+    return c.render(<TenetView tenet={tenet} />);
   }
 
   @Post("/")
   @Validate(MyRequest)
   async create(c) {
-    const input = parseRequestBody(c) as MyRequest
+    const input = parseRequestBody(c) as MyRequest;
     // ...
   }
 }
 ```
 
 > **Body parsing:** `@Validate` reads the request body parsed by the
-> `parseBody()` middleware from `js-mvc/validation` — mount it globally
+> `parseBody()` middleware from `spindle/thread` — mount it globally
 > (`app.use("*", parseBody())`) or per controller. It parses JSON as-is
 > and unflattens form bodies into nested objects/arrays, storing the
 > result on the context under `BODY_KEY`. Handlers read it via
@@ -61,27 +77,68 @@ class TenetsController extends ControllerBase {
 ### Repository
 
 ```ts
-import { RepositoryBase } from "js-mvc/repository/RepositoryBase"
+import { RepositoryBase } from "spindle/thread";
 
 interface Tenet { id: number; slug: string; title: string; status: string }
 
 class TenetRepo extends RepositoryBase<Tenet> {
-  override readonly tableName = "tenets"
+  override readonly tableName = "tenets";
 }
 
 // Per-request factory
-const repo = (db) => new TenetRepo(db)
+const repo = (db) => new TenetRepo(db);
 
 // Usage
-const tenet = await repo(db).findOneBy({ slug: "my-tenet" })
-const drafts = await repo(db).findAllBy({ status: "draft" })
+const tenet = await repo(db).findOneBy({ slug: "my-tenet" });
+const drafts = await repo(db).findAllBy({ status: "draft" });
 ```
+
+### Stored queries (`procs.ts`)
+
+```ts
+import { defineSql, sql, def } from "spindle/fiber";
+
+// `defineSql` is the fiber DSL for TypeScript-authored stored queries;
+// fiberPlugin compiles each procs.ts into a typed module at build time.
+export const procs = defineSql({
+  // lookups, actions, params ...
+});
+```
+
+Repositories execute them via typed `queryOne`/`queryAll`/`execute` helpers with `@name` binding.
+
+### Schema & seed
+
+```ts
+import { defineSchema, table, col, index } from "spindle/fiber";
+import { defineSeed, generate, rows, fake, pick, ref, seq } from "spindle/fiber";
+
+export const schema = defineSchema({
+  tables: {
+    tenets: table({
+      id: col.integer().primaryKey().autoIncrement(),
+      title: col.text().notNull(),
+      status: col.text().default("draft"),
+    }),
+  },
+  indexes: {
+    idx_tenets_status: index({ table: "tenets", columns: ["status"] }),
+  },
+});
+
+export const seed = defineSeed(schema, {
+  tenets: generate(20, {
+    title: fake("lorem.sentence"),
+  }),
+});
+```
+
+`fiberPlugin` compiles these into `src/.generated/schema.ts`, `src/.generated/seed.ts`, `db-types.d.ts`, and a derived `schema.sql`. `applySchema()` and `applySeed()` reconcile the live D1 database on boot.
 
 ### Client handler
 
 ```tsx
-import { BaseHandler } from "js-mvc/client/BaseHandler"
-import { useHandler } from "js-mvc/client/useHandler"
+import { BaseHandler, useHandler } from "spindle/fabric";
 
 class DismissHandler extends BaseHandler {
   hide() {
@@ -89,7 +146,7 @@ class DismissHandler extends BaseHandler {
   }
 }
 
-const Dismiss = useHandler(DismissHandler)
+const Dismiss = useHandler(DismissHandler);
 
 <Dismiss>
   <div class="card">
@@ -108,11 +165,10 @@ so you never write a `register(...)` call or enumerate handler imports.
 ### CSS-only interactivity
 
 ```tsx
-import { useHide } from "js-mvc/client/useHide"
-import { useDisable } from "js-mvc/client/useDisable"
+import { useHide, useDisable } from "spindle/fabric";
 
 // Show/hide content based on a condition (animate = "fade", "slide-up", ...)
-const Plan = useHide<"free" | "pro">({ scope: "plan" })
+const Plan = useHide<"free" | "pro">({ scope: "plan" });
 
 <Plan>
   <Plan.Trigger value="free">
@@ -126,7 +182,7 @@ const Plan = useHide<"free" | "pro">({ scope: "plan" })
 </Plan>
 
 // Dim & block an element until a condition is met (no animation presets)
-const Confirm = useDisable({ scope: "confirm" })
+const Confirm = useDisable({ scope: "confirm" });
 
 <Confirm>
   <Confirm.Trigger value="agree">
@@ -146,9 +202,9 @@ const Confirm = useDisable({ scope: "confirm" })
 
 - **Repository pattern** — `RepositoryBase` abstracts data access behind a domain-facing interface. Controllers and services never touch raw SQL
 - **Service layer** — `ServiceBase` holds business logic, shared between HTML and API controllers
-- **Request objects** — `IValidatable` encapsulates input validation as domain concepts, not scattered controller checks
+- **Request objects** — `RequestGuard` (and the `IValidatable` interface) encapsulates input validation as domain concepts, not scattered controller checks
 - **Per-request factories** — Repos are instantiated per-request (`tenetsRepo(db)`), not shared singletons. No stale state, trivial to test
-- **Domain errors** — Typed error hierarchy (`NotFoundError`, `ValidationError`, `ForbiddenError`, `ConflictError`) maps directly to HTTP status codes
+- **Domain errors** — Typed error hierarchy (`NotFoundError`, `ValidationError`, `ForbiddenError`, `ConflictError`, ...) maps directly to HTTP status codes
 
 ### Separation of Concerns
 
@@ -166,14 +222,14 @@ const Confirm = useDisable({ scope: "confirm" })
 
 ### Small Deliveries
 
-- **Thin base classes** — `ServiceBase` is 46 lines. `ControllerBase` is 161 lines. Each does one thing well
-- **No heavy ORM** — Parameterized SQL with injection guards. Complex queries live in `.sql` files
+- **Thin base classes** — `ServiceBase` and `ControllerBase` each do one thing well
+- **No heavy ORM** — Parameterized SQL with injection guards. Complex queries live in `procs.ts` (the `spindle/fiber` SQL DSL)
 - **No frontend framework** — `hono/jsx` for server rendering. Lightweight client handler dispatcher. No hydration, no bundle bloat
 - **No magic** — Decorators store metadata on `Symbol.metadata`, read back explicitly. No reflection, no runtime code generation
 
 ### Developer Experience
 
-- **Declarative over imperative** — `@Validate(Request)` instead of manual checks. `useHandler("dismiss")` instead of hand-written `data-*` attributes
+- **Declarative over imperative** — `@Validate(Request)` instead of manual checks. `useHandler(DismissHandler)` instead of hand-written `data-*` attributes
 - **Type safety by default** — `noImplicitOverride: true`, generic repositories, typed request objects, Stage 3 decorators
 - **Safety nets built in** — Column name validation, ORDER BY validation, empty criteria protection, correct null handling
 - **Instant feedback** — Vite HMR for CSS. Layout updates without full reload
@@ -182,12 +238,13 @@ const Confirm = useDisable({ scope: "confirm" })
 
 ## Architecture
 
-| Layer | Base class | Purpose |
+| Layer | Base class | Where |
 |---|---|---|
-| Controllers | `ControllerBase` | Route handling, rendering, guard execution |
-| Services | `ServiceBase` | Business logic, validation helpers |
-| Repositories | `RepositoryBase` | Data access, CRUD, typed SQL queries |
-| Client handlers | `BaseHandler` | DOM event wiring, target resolution |
+| Controllers | `ControllerBase` | `spindle/thread` |
+| Services | `ServiceBase` | `spindle/thread` |
+| Repositories | `RepositoryBase` | `spindle/thread` |
+| Client handlers | `BaseHandler` | `spindle/fabric` |
+| Schema/seed/procs DSL | — | `spindle/fiber` |
 
 ### Request flow
 
@@ -200,24 +257,49 @@ const Confirm = useDisable({ scope: "confirm" })
 
 ## API reference
 
-### Exports
+### `spindle/fiber` — data layer
 
-| Subpath | What it provides |
+| Export | Purpose |
 |---|---|
-| `js-mvc/controller/ControllerBase` | `ControllerBase`, `@Get`, `@Post`, `@Put`, `@Delete`, `@Patch` |
-| `js-mvc/repository/RepositoryBase` | `RepositoryBase` with CRUD and dynamic finders |
-| `js-mvc/service/ServiceBase` | `ServiceBase` with error helpers |
-| `js-mvc/validation/decorators` | `@Exists`, `@Authorize`, `@Validate` |
-| `js-mvc/validation` | `parseBody()` middleware, `parseRequestBody()`, `unflattenFormBody()`, `BODY_KEY` |
-| `js-mvc/validation/IValidatable` | `IValidatable` interface for request objects |
-| `js-mvc/errors` | `AppError`, `NotFoundError`, `ValidationError`, etc. |
-| `js-mvc/client/useHandler` | `useHandler()` factory for client handlers |
-| `js-mvc/client/useHide` | `useHide()` factory for CSS-only show/hide (animated) |
-| `js-mvc/client/useDisable` | `useDisable()` factory for CSS-only disable/enable |
-| `js-mvc/client/BaseHandler` | `BaseHandler` for custom client controllers |
-| `js-mvc/client/dispatcher` | Client-side handler dispatcher |
-| `js-mvc/adapters/d1` | Cloudflare D1 database adapter |
-| `js-mvc/plugins` | Vite plugins (`spindlePlugin`, `fiberPlugin`, `fabricPlugin`, `threadPlugin`) |
+| `defineSchema`, `table`, `col`, `index` | Declarative D1 schema DSL |
+| `defineSeed`, `generate`, `rows`, `fake`, `pick`, `ref`, `seq` | Declarative dev-seed DSL |
+| `def`, `lookup`, `action`, `param`, `sql` | Stored-query (`procs.ts`) DSL |
+| `applySchema`, `applySeed` | Runtime reconciliation of D1 against the schema/seed |
+| `compileProcs`, `compileSeed` | Build-time compilers (used by `fiberPlugin`) |
+| `Database`, `Statement`, `DbResult` | Minimal D1-compatible database types |
+
+### `spindle/thread` — domain layer
+
+| Export | Purpose |
+|---|---|
+| `ControllerBase`, `@Get`, `@Post`, `@Put`, `@Delete`, `@Patch`, `@Render` | Routing and rendering |
+| `RepositoryBase` | CRUD, dynamic finders, typed stored-query execution |
+| `ServiceBase` | Business logic with error helpers |
+| `ViewBuilderBase` | View-model construction base |
+| `@Exists`, `@Authorize`, `@Validate` | Guard decorators |
+| `RequestGuard`, `IValidatable`, `ValidationResult` | Request validation |
+| `parseBody`, `parseRequestBody`, `unflattenFormBody`, `BODY_KEY` | Body parsing middleware |
+| `AppError`, `NotFoundError`, `UnauthorizedError`, `ForbiddenError`, `ValidationError`, `ConflictError`, `RateLimitError`, `ServerError` | Error hierarchy |
+
+### `spindle/fabric` — design layer
+
+| Export | Purpose |
+|---|---|
+| `useHandler` | Wrapper/Trigger factory for client handlers |
+| `BaseHandler` | Base class for custom client controllers |
+| `useHide` | CSS-only show/hide (animated) |
+| `useDisable` | CSS-only disable/enable |
+| `useEvent` | Generic event wiring |
+| `hydrate`, `hydrateEvent`, `register` | Client-side hydration runtime |
+
+### `spindle/plugins` — Vite plugins
+
+| Export | Purpose |
+|---|---|
+| `spindlePlugin` | Unified entry for all three branches |
+| `fiberPlugin` | Schema, seed, and stored-query generation |
+| `fabricPlugin` | CSS bundling + client handler registration |
+| `threadPlugin` | Client-side TypeScript bundling (esbuild) |
 
 ---
 
@@ -273,7 +355,7 @@ Stack guards above handlers. They execute in declaration order:
 @Get("/:id")
 @Exists("user", (c) => usersRepo(c.env.DB).findById(Number(c.req.param("id"))))
 @Authorize((c) => {
-  if (c.get("user").role !== "admin") throw new ForbiddenError()
+  if (c.get("user").role !== "admin") throw new ForbiddenError();
 })
 async adminView(c) {
   const user = c.get("user") // loaded by @Exists
@@ -290,7 +372,7 @@ plugin takes a single options object grouped by concern; all paths have
 convention defaults, so `{}` works out of the box.
 
 ```ts
-import { spindlePlugin, fiberPlugin } from "js-mvc/plugins"
+import { spindlePlugin, fiberPlugin } from "spindle/plugins";
 
 // Everything in one call:
 export default {
@@ -301,19 +383,19 @@ export default {
           sourceDirs: ["src/styles", "src/components"],
         },
         handlers: {
-          // Handlers are glob-discovered (default: src/views/handlers/**/*.ts)
+          // Handlers are glob-discovered (default: src/views/handlers/**/*Handler.ts)
           // and auto-registered; no per-handler paths in source.
           include: "src/views/handlers/**/*Handler.ts",
         },
       },
     }),
   ],
-}
+};
 
 // Or just the data layer (schema, seed, stored queries):
 export default {
   plugins: [fiberPlugin()],
-}
+};
 ```
 
 `fiberPlugin` runs schema, seed, and stored-query compilation in one ordered
