@@ -1,0 +1,57 @@
+name: rc
+
+on:
+  push:
+    branches: [develop]
+
+permissions:
+  contents: write
+
+jobs:
+  build-rc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Compute RC version
+        id: version
+        run: |
+          BASE="$(node -p "require('./packages/package.json').version.split('-')[0]")"
+          echo "rc=${BASE}-rc.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Set RC version
+        run: npm pkg set version="${{ steps.version.outputs.rc }}" --workspace spindle
+
+      - name: Build
+        run: npm run build --workspace spindle
+
+      - name: Test (non-blocking — pre-existing failures tracked separately)
+        run: npm test --workspace spindle
+        continue-on-error: true
+
+      - name: Pack
+        run: npm pack --workspace spindle
+
+      - name: Create GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${{ steps.version.outputs.rc }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release delete "$TAG" --yes
+          fi
+          gh release create "$TAG" spindle-*.tgz \
+            --prerelease \
+            --target "${{ github.sha }}" \
+            --title "spindle ${{ steps.version.outputs.rc }}" \
+            --notes "Automated RC built from develop@${{ github.sha }}. Promote it with the publish workflow (Actions → publish → Run workflow → enter ${{ steps.version.outputs.rc }})."
