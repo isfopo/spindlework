@@ -1,19 +1,21 @@
-# AGENTS.md — js-mvc
+# AGENTS.md — spindlework
 
 ## Project
 
-Cloudflare Worker using **Hono** with server-side JSX (`hono/jsx`). MVC architecture.
+Workspace monorepo: the `spindlework` framework (`packages/`) plus an example Cloudflare Worker app (`examples/tenet`) using **Hono** with server-side JSX (`hono/jsx`). MVC architecture.
 
 ## Commands
 
+Run in the example app (`examples/tenet`), either from the workspace root with `--workspace tenet` or from inside the example directory:
+
 | Task | Command |
 |---|---|
-| Dev server | `npm run dev` |
-| Deploy | `npm run build && wrangler deploy` |
-| Build (for preview) | `npm run build` |
-| Preview build | `npm run preview` |
-| Generate Cloudflare binding types | `npm run cf-typegen` |
-| Build CSS only | `npm run build:css` |
+| Dev server | `npm run dev --workspace tenet` |
+| Deploy | `npm run build --workspace tenet && wrangler deploy` |
+| Build (for preview) | `npm run build --workspace tenet` |
+| Preview build | `npm run preview --workspace tenet` |
+| Generate Cloudflare binding types | `npm run cf-typegen --workspace tenet` |
+| Build the framework package | `npm run build --workspace spindlework` |
 
 No linter or formatter yet.
 
@@ -23,33 +25,29 @@ The CSS build is **automatic** with full HMR support:
 
 1. **Development** (`npm run dev`):
    - CSS builds once at startup
-   - Vite watches `src/views/styles/**/*.css`, `src/views/components/**/*.module.css`, and `src/views/routes/**/*.module.css`
+   - Vite watches `src/views/tokens/**/*.css`, `src/views/elements/**/*.css`, `src/views/components/**/*.module.css`, and `src/views/routes/**/*.module.css`
    - On save: CSS rebuilds + Layout HMR updates instantly
    
 2. **Production build** (`npm run build`): CSS builds, then Vite bundles
 
 3. **Deploy** (`npm run deploy`): CSS builds → Vite builds → Wrangler deploys
 
-**When to manually run `npm run build:css`:**
-- To verify CSS output without starting the dev server
-- In CI/CD pipelines if you need the CSS files before the main build
-
 ## Architecture
 
 - **Entry point:** `src/index.tsx` — creates the `Hono` app, mounts controllers, and defines the root route directly.
-- **Controllers** (`src/views/routes/*/controller.tsx`): Each controller extends `ControllerBase` from `js-mvc/controller/ControllerBase`, sets an override `base` string (the route prefix), declares routes via decorators, and calls `configureRendering({ layout, handleError })` in the constructor to wire up the shared layout and error handler.
+- **Controllers** (`src/views/routes/*/controller.tsx`): Each controller extends `ControllerBase` from `spindlework/thread`, sets an override `base` string (the route prefix), declares routes via decorators, and calls `configureRendering({ layout, handleError })` in the constructor to wire up the shared layout and error handler.
 - **API Controllers** (`src/views/routes/*/controller.api.tsx`): Same pattern but return JSON. Share business logic via services.
 - **Views** (`src/views/routes/*/views/`): Top-level page components using `FC` from `hono/jsx` with typed ViewModel.
-- **Components** (`src/views/components/`): Reusable UI pieces. Use `useHandler()` from `js-mvc/client/useHandler` for client-side handler wiring.
-- **Services** (`src/domains/*/service.ts`): Business logic layer shared between HTML and API controllers. Extend `ServiceBase` from `js-mvc/service/ServiceBase`.
-- **Repositories** (`src/domains/*/repo.ts`): Data access layer. Extend `RepositoryBase<T, QueryMap>` from `js-mvc/repository/RepositoryBase`. D1Database is injected via constructor; repos are created per-request using factory functions (e.g., `tenetsRepo(db)`). Inherit generic CRUD (`findById`, `findAll`, `create`, `update`, `delete`, `count`) and dynamic finders (`findOneBy`, `findAllBy`, `existsBy`, `deleteBy`). Stored queries are declared in `procs.ts` (the `js-mvc/sql` DSL) and compiled by `sqlPlugin` into a typed `ProcMap` — repos invoke them via typed `queryOne`/`queryAll`/`execute` with `@name` binding. See **Repository Security** below for validation details.
+- **Components** (`src/views/components/`): Reusable UI pieces. Use `useHandler()` from `spindlework/fabric` for client-side handler wiring.
+- **Services** (`src/domains/*/service.ts`): Business logic layer shared between HTML and API controllers. Extend `ServiceBase` from `spindlework/thread`.
+- **Repositories** (`src/domains/*/repo.ts`): Data access layer. Extend `RepositoryBase<T, QueryMap>` from `spindlework/thread`. D1Database is injected via constructor; repos are created per-request using factory functions (e.g., `tenetsRepo(db)`). Inherit generic CRUD (`findById`, `findAll`, `create`, `update`, `delete`, `count`) and dynamic finders (`findOneBy`, `findAllBy`, `existsBy`, `deleteBy`). Stored queries are declared in `procs.ts` (the `spindlework/fiber` SQL DSL) and compiled by `fiberPlugin` into a typed `ProcMap` — repos invoke them via typed `queryOne`/`queryAll`/`execute` with `@name` binding. See **Repository Security** below for validation details.
 - **Models** (`src/domains/*/model.ts`): Row types matching D1 table columns.
-- **Schema** (`src/domains/schema.ts`): The D1 schema source of truth, declared with the TS DSL (`defineSchema`/`table`/`col`/`index` from `js-mvc/schema`). `schemaPlugin` generates `src/domains/db-types.d.ts` (model interfaces), a derived `src/migrations/schema.sql` (gitignored), and the runtime module `src/.generated/schema.ts`. On first request `applySchema()` (`js-mvc/data/applySchema`) reconciles the live D1 DB against the desired state — adding columns in place, rebuilding tables for non-additive changes, syncing indexes. `.sql` **query** files are unaffected.
-- **Dev seed** (`src/domains/seed.ts`): Declarative dev-database data via the `js-mvc/seed` DSL (`defineSeed`/`generate`/`rows` + `fake`/`pick`/`ref`/`seq`). Columns not overridden are inferred from the schema (PKs sequence, uniques stay unique, FKs sample the referenced table, CHECK columns pick from their enums, DEFAULT columns are left to the DB). `seedPlugin` compiles the spec — the faker library (a devDependency) runs only in the plugin — into a pure-data module `src/.generated/seed.ts`; `applySeed()` (`js-mvc/seed`) sows it on DEV boot, re-sowing only when the spec's hash changes or a seeded table is empty. Runtime never imports faker.
-- **Stored queries** (`src/domains/*/procs.ts`): TypeScript-authored actions & lookups via the `js-mvc/sql` DSL (`def`/`lookup`/`action`/`param`/`sql`). `sqlPlugin` compiles each `procs.ts` once into a static SQL module (`procs.generated.ts`) with a typed `ProcMap`, deriving result/parameter types from the schema singleton — projections like `t.*` expand to the model interface, aliased columns inherit their type (enums, nullability), and params infer from the columns they bind. Repos execute them via the existing `queryOne`/`queryAll`/`execute` helpers.
+- **Schema** (`src/domains/schema.ts`): The D1 schema source of truth, declared with the TS DSL (`defineSchema`/`table`/`col`/`index` from `spindlework/fiber`). `fiberPlugin` generates `src/domains/db-types.d.ts` (model interfaces), a derived `src/migrations/schema.sql` (gitignored), and the runtime module `src/.generated/schema.ts`. On first request `applySchema()` (`spindlework/fiber`) reconciles the live D1 DB against the desired state — adding columns in place, rebuilding tables for non-additive changes, syncing indexes. `.sql` **query** files are unaffected.
+- **Dev seed** (`src/domains/seed.ts`): Declarative dev-database data via the `spindlework/fiber` seed DSL (`defineSeed`/`generate`/`rows` + `fake`/`pick`/`ref`/`seq`). Columns not overridden are inferred from the schema (PKs sequence, uniques stay unique, FKs sample the referenced table, CHECK columns pick from their enums, DEFAULT columns are left to the DB). `fiberPlugin` compiles the spec — the faker library (a devDependency) runs only in the plugin — into a pure-data module `src/.generated/seed.ts`; `applySeed()` (`spindlework/fiber`) sows it on DEV boot, re-sowing only when the spec's hash changes or a seeded table is empty. Runtime never imports faker.
+- **Stored queries** (`src/domains/*/procs.ts`): TypeScript-authored actions & lookups via the `spindlework/fiber` SQL DSL (`def`/`lookup`/`action`/`param`/`sql`). `fiberPlugin` compiles each `procs.ts` once into a static SQL module (`procs.generated.ts`) with a typed `ProcMap`, deriving result/parameter types from the schema singleton — projections like `t.*` expand to the model interface, aliased columns inherit their type (enums, nullability), and params infer from the columns they bind. Repos execute them via the existing `queryOne`/`queryAll`/`execute` helpers.
 - **Requests** (`src/views/routes/*/requests/`): IValidatable form objects with `validate()` method.
-- **Framework** (`package/src/`): Reusable framework code imported via `js-mvc/*` path aliases. Contains `ControllerBase`, `RepositoryBase`, `ServiceBase`, `BaseHandler`, validation decorators, error classes, and utilities.
-- **Client entry** (`src/.generated/client-entry.ts`): Auto-generated by `handlerRegistryPlugin` (see below). It imports the generated handler registry and re-exports `hydrate`/`hydrateEvent`. Loaded by the Layout and referenced by inline hydration scripts.
+- **Framework** (`packages/`): Reusable framework code shipped as the `spindlework` npm package, imported via `spindlework/*` subpath exports (`spindlework/thread`, `spindlework/fiber`, `spindlework/fabric`, `spindlework/plugins`). Contains `ControllerBase`, `RepositoryBase`, `ServiceBase`, `BaseHandler`, validation decorators, error classes, and utilities.
+- **Client entry** (`src/.generated/client-entry.ts`): Auto-generated by `fabricPlugin` (see below). It imports the generated handler registry and re-exports `hydrate`/`hydrateEvent`. Loaded by the Layout and referenced by inline hydration scripts.
 - **Error handler** (`src/error-handler.tsx`): Project-specific error handling that maps `AppError` subclasses to HTML responses. Imported by controllers via `configureRendering()`.
 
 ## Routing Convention
@@ -57,7 +55,7 @@ The CSS build is **automatic** with full HMR support:
 Routes are declared with decorators from `ControllerBase`:
 
 ```ts
-import { Get, Post, Delete, ControllerBase } from "./ControllerBase";
+import { Get, Post, Delete, ControllerBase } from "spindlework/thread";
 
 class MyController extends ControllerBase {
   override base = "api";
@@ -78,8 +76,8 @@ class MyController extends ControllerBase {
 Use validation/guard decorators to handle cross-cutting concerns before route handlers:
 
 ```ts
-import { Exists, Validate } from "js-mvc/validation/decorators";
-import { parseRequestBody } from "js-mvc/validation";
+import { Exists, Validate } from "spindlework/thread";
+import { parseRequestBody } from "spindlework/thread";
 import { ProposeTenetRequest } from "../../domains/requests/ProposeTenetRequest";
 
 class TenetsController extends ControllerBase {
@@ -100,7 +98,7 @@ class TenetsController extends ControllerBase {
 ```
 
 > **Body parsing:** `@Validate` reads the request body parsed by the
-> `parseBody()` middleware (`js-mvc/validation`). Mount it globally
+> `parseBody()` middleware (`spindlework/thread`). Mount it globally
 > (`app.use("*", parseBody())`) or per controller. It parses JSON as-is
 > and unflattens form bodies into nested objects/arrays, storing the
 > result on the context under `BODY_KEY`. Handlers read it via
@@ -165,10 +163,10 @@ await repo.deleteBy({});
 
 ## Client-Side Handlers — Use `useHandler()` Always
 
-**Never write `data-controller`, `data-action`, or hydration scripts by hand.** Always use the `useHandler()` component factory from `js-mvc/client/useHandler`. It renders the element, generates a unique id, and emits an inline `<script type="module">` that hydrates the handler onto that element — the handler ships with its HTML, and no handler name appears in the markup.
+**Never write `data-controller`, `data-action`, or hydration scripts by hand.** Always use the `useHandler()` component factory from `spindlework/fabric`. It renders the element, generates a unique id, and emits an inline `<script type="module">` that hydrates the handler onto that element — the handler ships with its HTML, and no handler name appears in the markup.
 
 ```tsx
-import { useHandler } from "js-mvc/client";
+import { useHandler } from "spindlework/fabric";
 import { AddOptionHandler } from "views/handlers/AddOptionHandler";
 
 const AddOption = useHandler(AddOptionHandler);
@@ -195,7 +193,7 @@ Extra props passed to `Wrapper` or `Trigger` are automatically converted to `dat
 Handlers extend `BaseHandler`. The name is derived from the class name (`DismissHandler` → `"dismiss"`) at runtime — no decorator or static declaration is needed:
 
 ```ts
-import { BaseHandler } from "js-mvc/client";
+import { BaseHandler } from "spindlework/fabric";
 
 export class DismissHandler extends BaseHandler {
   override connect(): void {
@@ -208,7 +206,7 @@ export class DismissHandler extends BaseHandler {
 }
 ```
 
-New client handlers are auto-registered by `handlerRegistryPlugin` at build
+New client handlers are auto-registered by `fabricPlugin` at build
 time. The plugin glob-discovers any file under `src/views/handlers/` whose
 name ends in `*Handler.ts`, generates a registration module
 (`src/.generated/handlers.ts`) and a client entry module
@@ -222,7 +220,7 @@ file in the handlers directory and it will be picked up automatically.
 Controllers wrap every route response in a layout automatically via `configureRendering()`:
 
 ```ts
-import { ControllerBase, Get } from "js-mvc/controller/ControllerBase";
+import { ControllerBase, Get } from "spindlework/thread";
 import { Layout } from "views/routes/Shared/Layout";
 import { handleError } from "error-handler";
 
@@ -252,6 +250,6 @@ class MyController extends ControllerBase {
   is included in `ControllerBase.tsx` for environments that lack it.
 - Views use **semantic HTML** and rely on **Pico CSS defaults** for styling. Inline styles are prohibited.
   Custom layouts use CSS Modules in the same directory (e.g., `index.module.css`, `new.module.css`).
-- Framework code lives in `package/` and is imported via `js-mvc/*` path aliases.
-  Application code lives in `src/` and imports framework code, never the reverse.
-- Build scripts have been replaced by Vite plugins (`cssBuildPlugin`, `clientBuildPlugin`, `schemaPlugin`, `seedPlugin`, `sqlPlugin`, `handlerRegistryPlugin`).
+- Framework code lives in `packages/` and is consumed via the `spindlework` package subpath exports (`spindlework/thread`, `spindlework/fiber`, `spindlework/fabric`, `spindlework/plugins`).
+  Application code lives in `src/` (under `examples/tenet/`) and imports framework code, never the reverse.
+- Build scripts have been replaced by Vite plugins (`fabricPlugin`, `threadPlugin`, `fiberPlugin`), composed through the unified `spindlePlugin` entry from `spindlework/plugins`.

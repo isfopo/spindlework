@@ -1,42 +1,70 @@
-# js-mvc
+# spindlework
 
-Cloudflare Worker using **Hono** with server-side JSX (`hono/jsx`). MVC architecture with framework code extracted into a reusable `js-mvc` package.
+A composable TypeScript application framework for Cloudflare Workers, built on **Hono** with server-side JSX (`hono/jsx`). MVC architecture organized into three branches — **fiber** (data), **thread** (domain), and **fabric** (design) — shipped as the `spindlework` npm package.
+
+This repository is a workspace containing the framework (`packages/`) and an example application (`examples/tenet`).
 
 ---
+
+## Workspace layout
+
+```
+├── packages/              # the `spindlework` framework (npm package)
+│   ├── fiber/             # data layer — schema, seed, stored-query DSL + generation
+│   ├── thread/            # app layer — controllers, repositories, services, guards, errors
+│   ├── fabric/            # client layer — handlers, CSS build, hydration
+│   ├── plugins/           # Vite plugin entry points
+│   └── index.ts           # unified entry re-exporting all branches
+├── examples/
+│   └── tenet/             # example app — Cloudflare Worker with D1
+└── package.json           # workspace root
+```
 
 ## Getting started
 
+From the workspace root:
+
 ```bash
 npm install
-npm run dev
+```
+
+### Build the framework
+
+```bash
+npm run build --workspace spindlework
+```
+
+### Run the example app
+
+```bash
+npm run dev --workspace tenet
 ```
 
 ```bash
-npm run deploy
+npm run deploy --workspace tenet
 ```
 
-[For generating/synchronizing types based on your Worker configuration run](https://developers.cloudflare.com/workers/wrangler/commands/#types):
-
-```bash
-npm run cf-typegen
-```
+The example also has `build`, `preview`, `test`, `check:type`, and `cf-typegen` scripts — all runnable with `--workspace tenet` or from inside `examples/tenet/`.
 
 ---
 
-## Project structure
+## Importing the framework
 
-```
-├── package/              # js-mvc framework (reusable)
-│   ├── src/              # Controllers, repositories, client handlers, utils
-│   └── plugins/          # Vite plugins (CSS build, SQL types, client bundle)
-├── src/                  # Application code
-│   ├── .generated/       # Auto-generated (handlers, client entry, SQL types)
-│   ├── domains/             # Repositories, models, SQL queries
-│   ├── error-handler.tsx # Project-specific error handling
-│   ├── middleware/      # Auth and other middleware
-│   └── views/            # Controllers, views, components, handlers
-├── vite.config.ts        # Vite configuration with js-mvc plugins
-└── vitest.config.ts      # Test configuration
+Consumers depend on the `spindlework` package and import from its subpath exports:
+
+| Import | What it provides |
+|---|---|
+| `spindlework` | Everything (root re-export) |
+| `spindlework/fiber` | Schema/seed/procs DSL, `applySchema`, `applySeed`, `Database` types |
+| `spindlework/thread` | `ControllerBase`, `RepositoryBase`, `ServiceBase`, guards, errors, middleware |
+| `spindlework/fabric` | `useHandler`, `BaseHandler`, `hydrate`/`hydrateEvent`, CSS build |
+| `spindlework/plugins` | Vite plugins — `spindlePlugin`, `fiberPlugin`, `fabricPlugin`, `threadPlugin` |
+
+```ts
+import { ControllerBase, Get } from "spindlework/thread";
+import { defineSchema, table, col } from "spindlework/fiber";
+import { useHandler } from "spindlework/fabric";
+import { spindlePlugin } from "spindlework/plugins";
 ```
 
 ---
@@ -45,26 +73,37 @@ npm run cf-typegen
 
 The project uses a two-layer structure:
 
-- **`package/`** — Framework code (`js-mvc`). Import via `js-mvc/*` path aliases. Contains `ControllerBase`, `RepositoryBase`, `BaseHandler`, validation, error classes, and Vite plugins.
-- **`src/`** — Application code. Contains controllers, views, services, repositories, and project-specific error handling.
+- **`packages/`** — Framework code (the `spindlework` package). Contains `ControllerBase`, `RepositoryBase`, `ServiceBase`, `BaseHandler`, validation, error classes, and Vite plugins.
+- **`examples/tenet/`** — Application code. Contains controllers, views, services, repositories, and project-specific error handling, all imported from `spindlework/*`.
 
-Controllers import from `js-mvc/controller/ControllerBase` and call `configureRendering()` to wire up the shared layout and error handler.
+Controllers import from `spindlework/thread` and call `configureRendering()` to wire up the shared layout and error handler.
+
+### The three branches
+
+| Branch | Concern | Provides |
+|---|---|---|
+| **fiber** | Data | SQL, schemas, seeds, stored queries (`procs.ts`), database adapters, type generation |
+| **thread** | Domain | Controllers, repositories, services, guards, validation, errors |
+| **fabric** | Design | Components, views, layouts, client handlers, CSS |
+
+See [`packages/README.md`](packages/README.md) for the full framework documentation and [`METAPHOR.md`](METAPHOR.md) for the conceptual model behind the three branches.
 
 ---
 
 ## Build process
 
-Standalone build scripts (`scripts/build-css.ts`, `scripts/build-client.ts`) have been replaced by Vite plugins:
+The framework is built with **tsdown** (`packages/`), emitting `dist/` per entry.
+
+The example app's build is driven by Vite plugins from `spindlework/plugins`, one per branch plus a unified entry:
 
 | Plugin | Purpose |
 |---|---|
-| `schemaPlugin` | Generates db-types, derived `schema.sql`, and the runtime schema module from `src/domains/schema.ts` |
-| `seedPlugin` | Compiles TS-authored `src/domains/seed.ts` (faker, dev-only) into a pure-data module |
-| `sqlPlugin` | Compiles TS-authored `procs.ts` stored queries into typed SQL modules |
-| `cssBuildPlugin` | Combines, scopes, inlines SVGs, and minifies CSS |
-| `clientBuildPlugin` | Bundles client-side TypeScript via esbuild |
+| `spindlePlugin` | Unified entry — runs all three branches from one options object |
+| `fiberPlugin` | Generates db-types, derived `schema.sql`, the runtime schema module, the compiled seed module, and typed `procs.generated.ts` modules |
+| `fabricPlugin` | Combines, scopes, inlines SVGs, minifies CSS; auto-registers client handlers |
+| `threadPlugin` | Bundles client-side TypeScript via esbuild |
 
-All plugins are configured in `vite.config.ts` and run automatically during `npm run dev` and `npm run build`.
+All plugins are configured in `examples/tenet/vite.config.ts` and run automatically during `npm run dev` and `npm run build`.
 
 ---
 

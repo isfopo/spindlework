@@ -1,0 +1,70 @@
+name: publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      rc_version:
+        description: "RC version to publish (e.g. 0.0.0-rc.5 — must match an existing v<rc> tag)"
+        required: true
+      final_version:
+        description: "Final version to publish (default: base of the RC, e.g. 0.0.0)"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish-rc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout RC tag
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v${{ inputs.rc_version }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Resolve final version
+        id: version
+        run: |
+          BASE="$(node -p "require('./packages/package.json').version.split('-')[0]")"
+          FINAL="${{ inputs.final_version }}"
+          if [ -z "$FINAL" ]; then FINAL="$BASE"; fi
+          echo "final=$FINAL" >> "$GITHUB_OUTPUT"
+          echo "Publishing ${{ inputs.rc_version }} as v$FINAL"
+
+      - name: Set final version
+        run: npm pkg set version="${{ steps.version.outputs.final }}" --workspace spindlework
+
+      - name: Build
+        run: npm run build --workspace spindlework
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --workspace spindlework
+
+      - name: Pack
+        run: npm pack --workspace spindlework
+
+      - name: Create stable GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA="$(git rev-parse HEAD)"
+          RELEASE="v${{ steps.version.outputs.final }}"
+          if gh release view "$RELEASE" >/dev/null 2>&1; then
+            gh release delete "$RELEASE" --yes
+          fi
+          gh release create "$RELEASE" spindlework-*.tgz \
+            --target "$SHA" \
+            --title "spindlework v${{ steps.version.outputs.final }}" \
+            --notes "Published from RC v${{ inputs.rc_version }} (commit $SHA)."
