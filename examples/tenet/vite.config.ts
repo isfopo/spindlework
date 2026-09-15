@@ -3,7 +3,7 @@ import { existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { defineConfig, type Plugin } from "vite";
-import { spindlePlugin } from "spindle/plugins";
+import { spindlePlugin } from "spindlework/plugins";
 
 
 const root = fileURLToPath(new URL(".", import.meta.url));

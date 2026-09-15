@@ -5,7 +5,7 @@
  * The template uses `__IDX__` as a placeholder for the field index.
  */
 
-import { BaseHandler } from "spindle/fabric";
+import { BaseHandler } from "spindlework/fabric";
 
 export class AddOptionHandler extends BaseHandler {
   private counter = 1; // template has index 0, so start at 1

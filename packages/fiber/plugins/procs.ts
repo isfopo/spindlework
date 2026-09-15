@@ -64,7 +64,7 @@ async function loadProcs(
   const code = result.outputFiles[0].text;
   const tmpFile = join(
     tmpdir(),
-    `spindle-procs-${createHash("sha1").update(procsPath).digest("hex").slice(0, 12)}-${Date.now()}.mjs`,
+    `spindlework-procs-${createHash("sha1").update(procsPath).digest("hex").slice(0, 12)}-${Date.now()}.mjs`,
   );
   await writeFile(tmpFile, code, "utf-8");
   try {

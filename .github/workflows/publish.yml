@@ -42,23 +42,18 @@ jobs:
           echo "Publishing ${{ inputs.rc_version }} as v$FINAL"
 
       - name: Set final version
-        run: npm pkg set version="${{ steps.version.outputs.final }}" --workspace spindle
+        run: npm pkg set version="${{ steps.version.outputs.final }}" --workspace spindlework
 
       - name: Build
-        run: npm run build --workspace spindle
+        run: npm run build --workspace spindlework
 
-      - name: Publish to npm (stubbed until NPM_TOKEN secret is configured)
+      - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if [ -n "$NODE_AUTH_TOKEN" ]; then
-            npm publish --workspace spindle --access public --tag latest
-          else
-            echo "NPM_TOKEN secret not configured — skipping npm publish. Registry setup pending."
-          fi
+        run: npm publish --workspace spindlework
 
       - name: Pack
-        run: npm pack --workspace spindle
+        run: npm pack --workspace spindlework
 
       - name: Create stable GitHub release
         env:
@@ -69,7 +64,7 @@ jobs:
           if gh release view "$RELEASE" >/dev/null 2>&1; then
             gh release delete "$RELEASE" --yes
           fi
-          gh release create "$RELEASE" spindle-*.tgz \
+          gh release create "$RELEASE" spindlework-*.tgz \
             --target "$SHA" \
-            --title "spindle v${{ steps.version.outputs.final }}" \
+            --title "spindlework v${{ steps.version.outputs.final }}" \
             --notes "Published from RC v${{ inputs.rc_version }} (commit $SHA)."

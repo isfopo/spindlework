@@ -59,7 +59,7 @@ export function fabricPlugin(options: FabricPluginOptions = {}): Plugin {
   };
 
   return {
-    name: "spindle:fabric",
+    name: "spindlework:fabric",
     enforce: "pre",
 
     configResolved(config) {

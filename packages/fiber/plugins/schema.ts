@@ -18,7 +18,7 @@ import type { ResolvedFiberPaths } from "./options";
 
 /**
  * Load the app's schema module: bundle the TS source (resolving the
- * spindle import to the framework DSL) and execute it for the
+ * spindlework import to the framework DSL) and execute it for the
  * SchemaDef.
  */
 export async function loadSchemaModule(
@@ -36,7 +36,7 @@ export async function loadSchemaModule(
   const code = result.outputFiles[0].text;
   const tmpFile = join(
     tmpdir(),
-    `spindle-schema-${createHash("sha1").update(schemaPath).digest("hex").slice(0, 12)}-${Date.now()}.mjs`,
+    `spindlework-schema-${createHash("sha1").update(schemaPath).digest("hex").slice(0, 12)}-${Date.now()}.mjs`,
   );
   await writeFile(tmpFile, code, "utf-8");
   try {

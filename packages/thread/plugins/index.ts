@@ -44,7 +44,7 @@ export function threadPlugin(options: ThreadPluginOptions = {}): Plugin {
   let isBuild = false;
 
   return {
-    name: "spindle:thread",
+    name: "spindlework:thread",
 
     configResolved(config) {
       isBuild = config.command === "build";

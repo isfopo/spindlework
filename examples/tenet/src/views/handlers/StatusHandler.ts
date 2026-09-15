@@ -2,7 +2,7 @@
  * Status handler — confirms before changing tenet status.
  */
 
-import { BaseHandler } from "spindle/fabric";
+import { BaseHandler } from "spindlework/fabric";
 
 export class StatusHandler extends BaseHandler {
   override connect(): void {

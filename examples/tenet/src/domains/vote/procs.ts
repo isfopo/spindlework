@@ -3,7 +3,7 @@
  * schema-derived types (procs.generated.ts).
  */
 import type { Database } from "domains/db-types";
-import { defineSql } from "spindle/fiber";
+import { defineSql } from "spindlework/fiber";
 
 const { def, lookup, action, param, sql, from, join } = defineSql<Database>();
 

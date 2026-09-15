@@ -7,7 +7,7 @@
  *   - a runtime schema module consumed by applySchema() to reconcile the
  *     live D1 DB against this desired state (initialize or update in place).
  */
-import { defineSchema, table, index, col } from "spindle";
+import { defineSchema, table, index, col } from "spindlework/fiber";
 
 export const schema = defineSchema({
   tables: {
