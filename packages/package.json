@@ -7,7 +7,7 @@
   "author": {"name": "Isaac Poole", "email": "isaacpoolemusic@gmail.com" },
   "repository": {
     "type": "git",
-    "url": "https://github.com/isfopo/js-mvc.git"
+    "url": "git+https://github.com/isfopo/spindlework.git"
   },
   "keywords": [
     "cloudflare",
