@@ -12,8 +12,13 @@
   },
   "allowScripts": {
     "sharp@0.34.5": true,
-    "workerd@1.20260828.1": true,
     "@parcel/watcher@2.6.0": true,
-    "esbuild@0.28.1": true
+    "esbuild": true,
+    "workerd": true
+  },
+  "overrides": {
+    "vitest": {
+      "vite": "^6.4.2"
+    }
   }
 }
