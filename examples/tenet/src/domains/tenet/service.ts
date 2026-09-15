@@ -1,4 +1,4 @@
-import { ServiceBase } from "spindle/thread";
+import { ServiceBase } from "spindlework/thread";
 import { tenetsRepo } from "./repo";
 import { votesRepo } from "domains/vote/repo";
 import type { TenetRow, TenetOptionRow, TenetStatus } from "./model";

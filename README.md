@@ -1,6 +1,6 @@
-# spindle
+# spindlework
 
-A composable TypeScript application framework for Cloudflare Workers, built on **Hono** with server-side JSX (`hono/jsx`). MVC architecture organized into three branches — **fiber** (data), **thread** (domain), and **fabric** (design) — shipped as the `spindle` npm package.
+A composable TypeScript application framework for Cloudflare Workers, built on **Hono** with server-side JSX (`hono/jsx`). MVC architecture organized into three branches — **fiber** (data), **thread** (domain), and **fabric** (design) — shipped as the `spindlework` npm package.
 
 This repository is a workspace containing the framework (`packages/`) and an example application (`examples/tenet`).
 
@@ -9,7 +9,7 @@ This repository is a workspace containing the framework (`packages/`) and an exa
 ## Workspace layout
 
 ```
-├── packages/              # the `spindle` framework (npm package)
+├── packages/              # the `spindlework` framework (npm package)
 │   ├── fiber/             # data layer — schema, seed, stored-query DSL + generation
 │   ├── thread/            # app layer — controllers, repositories, services, guards, errors
 │   ├── fabric/            # client layer — handlers, CSS build, hydration
@@ -31,7 +31,7 @@ npm install
 ### Build the framework
 
 ```bash
-npm run build --workspace spindle
+npm run build --workspace spindlework
 ```
 
 ### Run the example app
@@ -50,21 +50,21 @@ The example also has `build`, `preview`, `test`, `check:type`, and `cf-typegen` 
 
 ## Importing the framework
 
-Consumers depend on the `spindle` package and import from its subpath exports:
+Consumers depend on the `spindlework` package and import from its subpath exports:
 
 | Import | What it provides |
 |---|---|
-| `spindle` | Everything (root re-export) |
-| `spindle/fiber` | Schema/seed/procs DSL, `applySchema`, `applySeed`, `Database` types |
-| `spindle/thread` | `ControllerBase`, `RepositoryBase`, `ServiceBase`, guards, errors, middleware |
-| `spindle/fabric` | `useHandler`, `BaseHandler`, `hydrate`/`hydrateEvent`, CSS build |
-| `spindle/plugins` | Vite plugins — `spindlePlugin`, `fiberPlugin`, `fabricPlugin`, `threadPlugin` |
+| `spindlework` | Everything (root re-export) |
+| `spindlework/fiber` | Schema/seed/procs DSL, `applySchema`, `applySeed`, `Database` types |
+| `spindlework/thread` | `ControllerBase`, `RepositoryBase`, `ServiceBase`, guards, errors, middleware |
+| `spindlework/fabric` | `useHandler`, `BaseHandler`, `hydrate`/`hydrateEvent`, CSS build |
+| `spindlework/plugins` | Vite plugins — `spindlePlugin`, `fiberPlugin`, `fabricPlugin`, `threadPlugin` |
 
 ```ts
-import { ControllerBase, Get } from "spindle/thread";
-import { defineSchema, table, col } from "spindle/fiber";
-import { useHandler } from "spindle/fabric";
-import { spindlePlugin } from "spindle/plugins";
+import { ControllerBase, Get } from "spindlework/thread";
+import { defineSchema, table, col } from "spindlework/fiber";
+import { useHandler } from "spindlework/fabric";
+import { spindlePlugin } from "spindlework/plugins";
 ```
 
 ---
@@ -73,10 +73,10 @@ import { spindlePlugin } from "spindle/plugins";
 
 The project uses a two-layer structure:
 
-- **`packages/`** — Framework code (the `spindle` package). Contains `ControllerBase`, `RepositoryBase`, `ServiceBase`, `BaseHandler`, validation, error classes, and Vite plugins.
-- **`examples/tenet/`** — Application code. Contains controllers, views, services, repositories, and project-specific error handling, all imported from `spindle/*`.
+- **`packages/`** — Framework code (the `spindlework` package). Contains `ControllerBase`, `RepositoryBase`, `ServiceBase`, `BaseHandler`, validation, error classes, and Vite plugins.
+- **`examples/tenet/`** — Application code. Contains controllers, views, services, repositories, and project-specific error handling, all imported from `spindlework/*`.
 
-Controllers import from `spindle/thread` and call `configureRendering()` to wire up the shared layout and error handler.
+Controllers import from `spindlework/thread` and call `configureRendering()` to wire up the shared layout and error handler.
 
 ### The three branches
 
@@ -94,7 +94,7 @@ See [`packages/README.md`](packages/README.md) for the full framework documentat
 
 The framework is built with **tsdown** (`packages/`), emitting `dist/` per entry.
 
-The example app's build is driven by Vite plugins from `spindle/plugins`, one per branch plus a unified entry:
+The example app's build is driven by Vite plugins from `spindlework/plugins`, one per branch plus a unified entry:
 
 | Plugin | Purpose |
 |---|---|

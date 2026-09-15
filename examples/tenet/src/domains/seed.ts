@@ -16,7 +16,7 @@
  * Lookup tables use literal `rows()` — stable, content-like data that also
  * types checkRef columns as unions of their primary-key values.
  */
-import { defineSeed, generate, rows, fake, seq } from "spindle/fiber";
+import { defineSeed, generate, rows, fake, seq } from "spindlework/fiber";
 import { schemaDef } from "../.generated/schema";
 
 export const seed = defineSeed(schemaDef, {

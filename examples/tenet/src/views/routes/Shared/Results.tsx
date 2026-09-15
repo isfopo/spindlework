@@ -1,7 +1,7 @@
 import { FC } from "hono/jsx";
 import { Layout } from "./Layout";
 import { Alert } from "views/components/Alert";
-import { AppError, ValidationError } from "spindle/thread";
+import { AppError, ValidationError } from "spindlework/thread";
 
 const DEFAULT_ERROR_MESSAGE = "Something's wrong";
 

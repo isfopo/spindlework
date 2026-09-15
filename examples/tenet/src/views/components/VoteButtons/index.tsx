@@ -5,7 +5,7 @@
  */
 
 import type { FC } from "hono/jsx";
-import { useHandler } from "spindle/fabric";
+import { useHandler } from "spindlework/fabric";
 import { VoteHandler } from "views/handlers/VoteHandler";
 
 export type UserVoteInfo = { choice: string; reason: string | null } | null;

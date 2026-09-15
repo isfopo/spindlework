@@ -1,9 +1,26 @@
 {
-  "name": "spindle",
+  "name": "spindlework",
   "version": "0.0.0",
   "private": false,
   "type": "module",
+  "description": "TypeScript framework for Cloudflare Workers on Hono: server-rendered JSX views, a typed SQL/schema DSL, and declarative client handlers.",
   "author": {"name": "Isaac Poole", "email": "isaacpoolemusic@gmail.com" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isfopo/js-mvc.git"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "hono",
+    "framework",
+    "jsx",
+    "sql",
+    "d1"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "tsdown --watch --sourcemap",
     "build": "tsdown",

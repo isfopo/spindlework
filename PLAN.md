@@ -4,7 +4,7 @@
 
 A private, single-team decision journal. Members propose structured tenets (context + options + recommendation), vote using consent-based voting (approve/abstain/block), and the outcome is permanently recorded. The archive becomes the team's institutional memory.
 
-Built on the existing spindle framework with D1 for storage and GitHub OAuth for authentication.
+Built on the existing spindlework framework with D1 for storage and GitHub OAuth for authentication.
 
 ---
 

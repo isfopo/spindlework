@@ -4,7 +4,7 @@
  * For "block", prompts for a reason before submitting the form.
  */
 
-import { BaseHandler } from "spindle/fabric";
+import { BaseHandler } from "spindlework/fabric";
 
 export class VoteHandler extends BaseHandler {
   override connect(): void {

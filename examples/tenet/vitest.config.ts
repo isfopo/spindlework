@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
 import { defineConfig } from "vitest/config";
 import type { Plugin } from "vite";
-import { fiberPlugin } from "spindle/plugins";
+import { fiberPlugin } from "spindlework/plugins";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 

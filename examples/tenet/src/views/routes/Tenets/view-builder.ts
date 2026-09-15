@@ -5,7 +5,7 @@ import type {
   UserInfo,
 } from "domains/tenet/service";
 import type { TenetStatus } from "domains/tenet/model";
-import { ViewBuilderBase } from "spindle/thread";
+import { ViewBuilderBase } from "spindlework/thread";
 import { TenetListViewModel } from "./views";
 import { TenetDetailViewModel } from "./views/show";
 

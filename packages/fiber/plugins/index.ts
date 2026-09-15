@@ -56,7 +56,7 @@ export function fiberPlugin(options: FiberPluginOptions = {}): Plugin {
   }
 
   return {
-    name: "spindle:fiber",
+    name: "spindlework:fiber",
     enforce: "pre",
 
     configResolved(config) {

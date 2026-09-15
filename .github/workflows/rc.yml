@@ -30,17 +30,17 @@ jobs:
           echo "rc=${BASE}-rc.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
       - name: Set RC version
-        run: npm pkg set version="${{ steps.version.outputs.rc }}" --workspace spindle
+        run: npm pkg set version="${{ steps.version.outputs.rc }}" --workspace spindlework
 
       - name: Build
-        run: npm run build --workspace spindle
+        run: npm run build --workspace spindlework
 
       - name: Test (non-blocking — pre-existing failures tracked separately)
-        run: npm test --workspace spindle
+        run: npm test --workspace spindlework
         continue-on-error: true
 
       - name: Pack
-        run: npm pack --workspace spindle
+        run: npm pack --workspace spindlework
 
       - name: Create GitHub prerelease
         env:
@@ -50,8 +50,8 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release delete "$TAG" --yes
           fi
-          gh release create "$TAG" spindle-*.tgz \
+          gh release create "$TAG" spindlework-*.tgz \
             --prerelease \
             --target "${{ github.sha }}" \
-            --title "spindle ${{ steps.version.outputs.rc }}" \
+            --title "spindlework ${{ steps.version.outputs.rc }}" \
             --notes "Automated RC built from develop@${{ github.sha }}. Promote it with the publish workflow (Actions → publish → Run workflow → enter ${{ steps.version.outputs.rc }})."

@@ -1,4 +1,4 @@
-# spindle
+# spindlework
 
 MVC framework for Cloudflare Workers built on Hono with server-side JSX. Organized into three branches — **fiber** (data), **thread** (domain), **fabric** (design) — each importable as its own subpath.
 
@@ -19,7 +19,7 @@ MVC framework for Cloudflare Workers built on Hono with server-side JSX. Organiz
 ## Installation
 
 ```bash
-npm install spindle
+npm install spindlework
 ```
 
 Requires `hono` (and `vite`/`wrangler` for the build tooling) as peer dependencies.
@@ -30,11 +30,11 @@ Requires `hono` (and `vite`/`wrangler` for the build tooling) as peer dependenci
 
 | Subpath | What it provides |
 |---|---|
-| `spindle` | Everything (root re-export) |
-| `spindle/fiber` | Schema/seed/procs DSL, `applySchema`, `applySeed`, `Database` types, SQL compiler |
-| `spindle/thread` | `ControllerBase`, `RepositoryBase`, `ServiceBase`, guards, errors, middleware |
-| `spindle/fabric` | `useHandler`, `BaseHandler`, `useHide`, `useDisable`, `useEvent`, hydration |
-| `spindle/plugins` | Vite plugins — `spindlePlugin`, `fiberPlugin`, `fabricPlugin`, `threadPlugin` |
+| `spindlework` | Everything (root re-export) |
+| `spindlework/fiber` | Schema/seed/procs DSL, `applySchema`, `applySeed`, `Database` types, SQL compiler |
+| `spindlework/thread` | `ControllerBase`, `RepositoryBase`, `ServiceBase`, guards, errors, middleware |
+| `spindlework/fabric` | `useHandler`, `BaseHandler`, `useHide`, `useDisable`, `useEvent`, hydration |
+| `spindlework/plugins` | Vite plugins — `spindlePlugin`, `fiberPlugin`, `fabricPlugin`, `threadPlugin` |
 
 ---
 
@@ -43,8 +43,8 @@ Requires `hono` (and `vite`/`wrangler` for the build tooling) as peer dependenci
 ### Controller
 
 ```ts
-import { ControllerBase, Get, Post, Exists, Validate } from "spindle/thread";
-import { parseRequestBody } from "spindle/thread";
+import { ControllerBase, Get, Post, Exists, Validate } from "spindlework/thread";
+import { parseRequestBody } from "spindlework/thread";
 import { MyRequest } from "./requests";
 
 class TenetsController extends ControllerBase {
@@ -67,7 +67,7 @@ class TenetsController extends ControllerBase {
 ```
 
 > **Body parsing:** `@Validate` reads the request body parsed by the
-> `parseBody()` middleware from `spindle/thread` — mount it globally
+> `parseBody()` middleware from `spindlework/thread` — mount it globally
 > (`app.use("*", parseBody())`) or per controller. It parses JSON as-is
 > and unflattens form bodies into nested objects/arrays, storing the
 > result on the context under `BODY_KEY`. Handlers read it via
@@ -77,7 +77,7 @@ class TenetsController extends ControllerBase {
 ### Repository
 
 ```ts
-import { RepositoryBase } from "spindle/thread";
+import { RepositoryBase } from "spindlework/thread";
 
 interface Tenet { id: number; slug: string; title: string; status: string }
 
@@ -96,7 +96,7 @@ const drafts = await repo(db).findAllBy({ status: "draft" });
 ### Stored queries (`procs.ts`)
 
 ```ts
-import { defineSql, sql, def } from "spindle/fiber";
+import { defineSql, sql, def } from "spindlework/fiber";
 
 // `defineSql` is the fiber DSL for TypeScript-authored stored queries;
 // fiberPlugin compiles each procs.ts into a typed module at build time.
@@ -110,8 +110,8 @@ Repositories execute them via typed `queryOne`/`queryAll`/`execute` helpers with
 ### Schema & seed
 
 ```ts
-import { defineSchema, table, col, index } from "spindle/fiber";
-import { defineSeed, generate, rows, fake, pick, ref, seq } from "spindle/fiber";
+import { defineSchema, table, col, index } from "spindlework/fiber";
+import { defineSeed, generate, rows, fake, pick, ref, seq } from "spindlework/fiber";
 
 export const schema = defineSchema({
   tables: {
@@ -138,7 +138,7 @@ export const seed = defineSeed(schema, {
 ### Client handler
 
 ```tsx
-import { BaseHandler, useHandler } from "spindle/fabric";
+import { BaseHandler, useHandler } from "spindlework/fabric";
 
 class DismissHandler extends BaseHandler {
   hide() {
@@ -165,7 +165,7 @@ so you never write a `register(...)` call or enumerate handler imports.
 ### CSS-only interactivity
 
 ```tsx
-import { useHide, useDisable } from "spindle/fabric";
+import { useHide, useDisable } from "spindlework/fabric";
 
 // Show/hide content based on a condition (animate = "fade", "slide-up", ...)
 const Plan = useHide<"free" | "pro">({ scope: "plan" });
@@ -223,7 +223,7 @@ const Confirm = useDisable({ scope: "confirm" });
 ### Small Deliveries
 
 - **Thin base classes** — `ServiceBase` and `ControllerBase` each do one thing well
-- **No heavy ORM** — Parameterized SQL with injection guards. Complex queries live in `procs.ts` (the `spindle/fiber` SQL DSL)
+- **No heavy ORM** — Parameterized SQL with injection guards. Complex queries live in `procs.ts` (the `spindlework/fiber` SQL DSL)
 - **No frontend framework** — `hono/jsx` for server rendering. Lightweight client handler dispatcher. No hydration, no bundle bloat
 - **No magic** — Decorators store metadata on `Symbol.metadata`, read back explicitly. No reflection, no runtime code generation
 
@@ -240,11 +240,11 @@ const Confirm = useDisable({ scope: "confirm" });
 
 | Layer | Base class | Where |
 |---|---|---|
-| Controllers | `ControllerBase` | `spindle/thread` |
-| Services | `ServiceBase` | `spindle/thread` |
-| Repositories | `RepositoryBase` | `spindle/thread` |
-| Client handlers | `BaseHandler` | `spindle/fabric` |
-| Schema/seed/procs DSL | — | `spindle/fiber` |
+| Controllers | `ControllerBase` | `spindlework/thread` |
+| Services | `ServiceBase` | `spindlework/thread` |
+| Repositories | `RepositoryBase` | `spindlework/thread` |
+| Client handlers | `BaseHandler` | `spindlework/fabric` |
+| Schema/seed/procs DSL | — | `spindlework/fiber` |
 
 ### Request flow
 
@@ -257,7 +257,7 @@ const Confirm = useDisable({ scope: "confirm" });
 
 ## API reference
 
-### `spindle/fiber` — data layer
+### `spindlework/fiber` — data layer
 
 | Export | Purpose |
 |---|---|
@@ -268,7 +268,7 @@ const Confirm = useDisable({ scope: "confirm" });
 | `compileProcs`, `compileSeed` | Build-time compilers (used by `fiberPlugin`) |
 | `Database`, `Statement`, `DbResult` | Minimal D1-compatible database types |
 
-### `spindle/thread` — domain layer
+### `spindlework/thread` — domain layer
 
 | Export | Purpose |
 |---|---|
@@ -281,7 +281,7 @@ const Confirm = useDisable({ scope: "confirm" });
 | `parseBody`, `parseRequestBody`, `unflattenFormBody`, `BODY_KEY` | Body parsing middleware |
 | `AppError`, `NotFoundError`, `UnauthorizedError`, `ForbiddenError`, `ValidationError`, `ConflictError`, `RateLimitError`, `ServerError` | Error hierarchy |
 
-### `spindle/fabric` — design layer
+### `spindlework/fabric` — design layer
 
 | Export | Purpose |
 |---|---|
@@ -292,7 +292,7 @@ const Confirm = useDisable({ scope: "confirm" });
 | `useEvent` | Generic event wiring |
 | `hydrate`, `hydrateEvent`, `register` | Client-side hydration runtime |
 
-### `spindle/plugins` — Vite plugins
+### `spindlework/plugins` — Vite plugins
 
 | Export | Purpose |
 |---|---|
@@ -372,7 +372,7 @@ plugin takes a single options object grouped by concern; all paths have
 convention defaults, so `{}` works out of the box.
 
 ```ts
-import { spindlePlugin, fiberPlugin } from "spindle/plugins";
+import { spindlePlugin, fiberPlugin } from "spindlework/plugins";
 
 // Everything in one call:
 export default {
