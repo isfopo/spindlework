@@ -65,7 +65,7 @@ jobs:
       - name: Checkout RC tag
         uses: actions/checkout@v4
         with:
-          ref: refs/tags/v${{ steps.rc.outputs.tag }}
+          ref: refs/tags/${{ steps.rc.outputs.tag }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
