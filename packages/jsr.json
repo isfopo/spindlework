@@ -1,32 +1,24 @@
 {
   "name": "@isfopo/spindlework",
-  "version": "0.1.0",
+  "version": "0.0.7",
   "license": "MIT",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
-    },
-    "./fiber": {
-      "types": "./dist/fiber/index.d.mts",
-      "import": "./dist/fiber/index.mjs"
-    },
-    "./thread": {
-      "types": "./dist/thread/index.d.mts",
-      "import": "./dist/thread/index.mjs"
-    },
-    "./fabric": {
-      "types": "./dist/fabric/index.d.mts",
-      "import": "./dist/fabric/index.mjs"
-    },
-    "./plugins": {
-      "types": "./dist/plugins/index.d.mts",
-      "import": "./dist/plugins/index.mjs"
-    }
+    ".": "./dist/index.js",
+    "./fiber": "./dist/fiber/index.js",
+    "./thread": "./dist/thread/index.js",
+    "./fabric": "./dist/fabric/index.js",
+    "./plugins": "./dist/plugins/index.js"
   },
   "publish": {
-    "include": [
-      "README.md"
+    "exclude": [
+      "!dist",
+      "fiber",
+      "thread",
+      "fabric",
+      "plugins",
+      "index.ts",
+      "tsconfig.json",
+      "tsdown.config.ts"
     ]
   }
 }

@@ -22,12 +22,12 @@ push to develop ──► rc.yml ──► GitHub prerelease  v0.0.0-rc.<run#>
 Triggered by any push to `develop` (`.github/workflows/rc.yml`):
 
 1. `npm ci` and build the framework (`npm run build --workspace spindlework`)
-2. Compute the RC version `BASE-rc.<run#>` from `packages/package.json` — `BASE` is the current version with any prerelease suffix stripped, `<run#>` is the GitHub run number (unique per workflow, so RC versions never collide)
+2. Compute the RC version `BASE-rc.<N>` from `packages/package.json` — `BASE` is the current version with any prerelease suffix stripped, `<N>` is one past the number of existing `v<BASE>-rc.*` prereleases, so the RC counter **resets per version** (`0.1.0-rc.1`, `0.1.0-rc.2`, …)
 3. Run the test suite — **non-blocking**: the 9 pre-existing failures (fiber schema, fabric scope IDs) are tracked separately and won't block an RC
 4. `npm pack` → attach `spindlework-<rc>.tgz`
 5. Create a GitHub **prerelease** tagged `v<rc>` (e.g. `v0.0.0-rc.5`), targeting the pushed commit
 
-The RC version is **never committed** to `develop` — the tag and release carry it, while `packages/package.json` keeps the plain `BASE`. Re-running the workflow produces a new run number, so existing RCs are never overwritten.
+The RC version is **never committed** to `develop` — the tag and release carry it, while `packages/package.json` keeps the plain `BASE`. Each push to `develop` produces the next `BASE-rc.<N>`, so existing RCs are never overwritten (a concurrent push could pick the same `<N>`; re-running the workflow after it resolves is the recovery).
 
 ## 2. Promoting an RC — manual
 

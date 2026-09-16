@@ -1,11 +1,14 @@
 {
   "name": "spindlework",
-  "version": "0.0.0",
+  "version": "0.0.7",
   "private": false,
   "type": "module",
   "license": "MIT",
   "description": "TypeScript framework for Cloudflare Workers on Hono: server-rendered JSX views, a typed SQL/schema DSL, and declarative client handlers.",
-  "author": {"name": "Isaac Poole", "email": "isaacpoolemusic@gmail.com" },
+  "author": {
+    "name": "Isaac Poole",
+    "email": "isaacpoolemusic@gmail.com"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/isfopo/spindlework.git"
@@ -33,24 +36,24 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./fiber": {
-      "types": "./dist/fiber/index.d.mts",
-      "import": "./dist/fiber/index.mjs"
+      "types": "./dist/fiber/index.d.ts",
+      "import": "./dist/fiber/index.js"
     },
     "./thread": {
-      "types": "./dist/thread/index.d.mts",
-      "import": "./dist/thread/index.mjs"
+      "types": "./dist/thread/index.d.ts",
+      "import": "./dist/thread/index.js"
     },
     "./fabric": {
-      "types": "./dist/fabric/index.d.mts",
-      "import": "./dist/fabric/index.mjs"
+      "types": "./dist/fabric/index.d.ts",
+      "import": "./dist/fabric/index.js"
     },
     "./plugins": {
-      "types": "./dist/plugins/index.d.mts",
-      "import": "./dist/plugins/index.mjs"
+      "types": "./dist/plugins/index.d.ts",
+      "import": "./dist/plugins/index.js"
     }
   },
   "peerDependencies": {
