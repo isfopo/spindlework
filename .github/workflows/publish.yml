@@ -163,3 +163,11 @@ jobs:
           git add packages/package.json packages/jsr.json
           git commit -m "chore: bump version to $NEXT for the next release cycle"
           git push origin bump-branch:develop
+
+      - name: Merge into main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git checkout main
+          git merge develop --no-ff -m "Auto-merge {{ steps.version.outputs.final }} -> develop into main"
+          git push origin main
