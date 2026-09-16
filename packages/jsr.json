@@ -3,11 +3,11 @@
   "version": "0.0.1",
   "license": "MIT",
   "exports": {
-    ".": "./dist/index.mjs",
-    "./fiber": "./dist/fiber/index.mjs",
-    "./thread": "./dist/thread/index.mjs",
-    "./fabric": "./dist/fabric/index.mjs",
-    "./plugins": "./dist/plugins/index.mjs"
+    ".": "./dist/index.js",
+    "./fiber": "./dist/fiber/index.js",
+    "./thread": "./dist/thread/index.js",
+    "./fabric": "./dist/fabric/index.js",
+    "./plugins": "./dist/plugins/index.js"
   },
   "publish": {
     "exclude": [
