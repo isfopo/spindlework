@@ -35,9 +35,24 @@ jobs:
           RC_TAG="${{ inputs.rc_version }}"
           if [ -z "$RC_TAG" ]; then
             RC_TAG="$(gh release list \
-              --json tagName,isPrerelease,createdAt \
+              --repo "${GITHUB_REPOSITORY}" \
+              --json tagName,isPrerelease \
               --limit 100 \
-              --jq '[.[] | select(.isPrerelease)] | sort_by(.createdAt) | reverse | .[0].tagName' 2>/dev/null || true)"
+              --jq '[.[] | select(.isPrerelease) | .tagName] | .[]' \
+              | node -e "
+                const readline = require('readline');
+                const rl = readline.createInterface({ input: process.stdin });
+                let best = '', bestKey = '';
+                rl.on('line', (line) => {
+                  const t = line.trim();
+                  const m = t.match(/^v(\d+)\.(\d+)\.(\d+)-rc\.(\d+)$/);
+                  if (!m) return;
+                  const key = [m[1], m[2], m[3], m[4]].map((x) => x.padStart(6, '0')).join('.');
+                  if (key > bestKey) { bestKey = key; best = t; }
+                });
+                rl.on('close', () => console.log(best));
+              ")"
+
           fi
           if [ -z "$RC_TAG" ] || [ "$RC_TAG" = "null" ]; then
             echo "::error::No RC tag provided and no prerelease found — run the rc workflow first or pass rc_version."
