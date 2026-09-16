@@ -1,11 +1,14 @@
 {
   "name": "spindlework",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "private": false,
   "type": "module",
   "license": "MIT",
   "description": "TypeScript framework for Cloudflare Workers on Hono: server-rendered JSX views, a typed SQL/schema DSL, and declarative client handlers.",
-  "author": {"name": "Isaac Poole", "email": "isaacpoolemusic@gmail.com" },
+  "author": {
+    "name": "Isaac Poole",
+    "email": "isaacpoolemusic@gmail.com"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/isfopo/spindlework.git"
