@@ -273,11 +273,13 @@ jobs:
           git commit -m "chore: bump version to $NEXT for the next release cycle"
           git push origin bump-branch:develop
 
-      - name: Merge into main
+      - name: Merge published version into main
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git fetch origin develop main
+          RC_TAG="${{ needs.publish-npm.outputs.tag || needs.publish-jsr.outputs.tag }}"
+          FINAL="${{ needs.publish-npm.outputs.final || needs.publish-jsr.outputs.final }}"
+          git fetch origin main "refs/tags/${RC_TAG}:refs/tags/${RC_TAG}"
           git checkout main
-          git merge origin/develop --no-ff -m "Auto-merge v${{ needs.publish-npm.outputs.final || needs.publish-jsr.outputs.final }} into main"
+          git merge --no-ff "${RC_TAG}" -m "Merge published v${FINAL} (from ${RC_TAG}) into main"
           git push origin main
