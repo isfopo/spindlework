@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       rc_version:
-        description: "RC version to publish (e.g. 0.0.0-rc.5 — must match an existing v<rc> tag)"
-        required: true
+        description: "RC version to publish (e.g. 0.0.0-rc.5 — must match an existing v<rc> tag). Leave empty to promote the most recent RC."
+        required: false
       final_version:
         description: "Final version to publish (default: base of the RC, e.g. 0.0.0)"
         required: false
@@ -28,10 +28,28 @@ jobs:
   publish-rc:
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve RC tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RC_TAG="${{ inputs.rc_version }}"
+          if [ -z "$RC_TAG" ]; then
+            RC_TAG="$(gh release list \
+              --json tagName,isPrerelease,createdAt \
+              --limit 100 \
+              --jq '[.[] | select(.isPrerelease)] | sort_by(.createdAt) | reverse | .[0].tagName' 2>/dev/null || true)"
+          fi
+          if [ -z "$RC_TAG" ] || [ "$RC_TAG" = "null" ]; then
+            echo "::error::No RC tag provided and no prerelease found — run the rc workflow first or pass rc_version."
+            exit 1
+          fi
+          echo "tag=$RC_TAG" >> "$GITHUB_OUTPUT"
+          echo "Promoting RC tag: $RC_TAG"
+
       - name: Checkout RC tag
         uses: actions/checkout@v4
         with:
-          ref: refs/tags/v${{ inputs.rc_version }}
+          ref: refs/tags/v${{ steps.rc.outputs.tag }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -50,7 +68,7 @@ jobs:
           FINAL="${{ inputs.final_version }}"
           if [ -z "$FINAL" ]; then FINAL="$BASE"; fi
           echo "final=$FINAL" >> "$GITHUB_OUTPUT"
-          echo "Publishing ${{ inputs.rc_version }} as v$FINAL"
+          echo "Publishing v${{ steps.rc.outputs.tag }} as v$FINAL"
 
       - name: Set final version
         run: npm pkg set version="${{ steps.version.outputs.final }}" --workspace spindlework
@@ -103,7 +121,7 @@ jobs:
           gh release create "$RELEASE" spindlework-*.tgz \
             --target "$SHA" \
             --title "spindlework v${{ steps.version.outputs.final }}" \
-            --notes "Published from RC v${{ inputs.rc_version }} (commit $SHA)."
+            --notes "Published from RC v${{ steps.rc.outputs.tag }} (commit $SHA)."
 
       - name: Bump base version on develop
         env:
