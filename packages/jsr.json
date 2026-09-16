@@ -3,30 +3,22 @@
   "version": "0.0.1",
   "license": "MIT",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
-    },
-    "./fiber": {
-      "types": "./dist/fiber/index.d.mts",
-      "import": "./dist/fiber/index.mjs"
-    },
-    "./thread": {
-      "types": "./dist/thread/index.d.mts",
-      "import": "./dist/thread/index.mjs"
-    },
-    "./fabric": {
-      "types": "./dist/fabric/index.d.mts",
-      "import": "./dist/fabric/index.mjs"
-    },
-    "./plugins": {
-      "types": "./dist/plugins/index.d.mts",
-      "import": "./dist/plugins/index.mjs"
-    }
+    ".": "./dist/index.mjs",
+    "./fiber": "./dist/fiber/index.mjs",
+    "./thread": "./dist/thread/index.mjs",
+    "./fabric": "./dist/fabric/index.mjs",
+    "./plugins": "./dist/plugins/index.mjs"
   },
   "publish": {
-    "include": [
-      "README.md"
+    "exclude": [
+      "!dist",
+      "fiber",
+      "thread",
+      "fabric",
+      "plugins",
+      "index.ts",
+      "tsconfig.json",
+      "tsdown.config.ts"
     ]
   }
 }

@@ -120,7 +120,7 @@ jobs:
 
       - name: Publish to JSR
         working-directory: packages
-        run: npx --yes jsr publish
+        run: npx --yes jsr publish --allow-slow-types
 
       - name: Pack
         run: npm pack --workspace spindlework
