@@ -25,9 +25,12 @@ jobs:
 
       - name: Compute RC version
         id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           BASE="$(node -p "require('./packages/package.json').version.split('-')[0]")"
-          echo "rc=${BASE}-rc.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          COUNT="$(gh release list --json tagName --limit 1000 --jq "[.[] | select(.tagName | startswith(\"v${BASE}-rc.\"))] | length" 2>/dev/null || echo 0)"
+          echo "rc=${BASE}-rc.$((COUNT + 1))" >> "$GITHUB_OUTPUT"
 
       - name: Set RC version
         run: npm pkg set version="${{ steps.version.outputs.rc }}" --workspace spindlework
