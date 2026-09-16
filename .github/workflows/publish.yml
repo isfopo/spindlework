@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Resolve RC tag
+        id: rc
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
