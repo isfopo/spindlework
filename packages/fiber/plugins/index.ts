@@ -16,6 +16,7 @@
  */
 
 import type { Plugin, ViteDevServer } from "vite";
+import { basename } from "path";
 import {
   loadSchemaModule,
   writeRuntimeSchema,
@@ -37,6 +38,17 @@ export type { FiberPluginOptions } from "./options";
 
 export function fiberPlugin(options: FiberPluginOptions = {}): Plugin {
   let paths: ResolvedFiberPaths;
+
+  // Serialize pipeline runs: Vite can call buildStart concurrently for
+  // multiple environments, and watcher events can fire mid-run. Overlapping
+  // runs race on shared temp files (same-millisecond names, sweep+rename), so
+  // chain runs instead of letting them interleave.
+  let chain: Promise<void> = Promise.resolve();
+  function runSerialized(): Promise<void> {
+    const run = chain.then(runPipeline);
+    chain = run.catch(() => {});
+    return run;
+  }
 
   async function runPipeline(): Promise<void> {
     const schema = await loadSchemaModule(paths.projectRoot, paths.schemaPath);
@@ -66,7 +78,7 @@ export function fiberPlugin(options: FiberPluginOptions = {}): Plugin {
     async buildStart() {
       console.log("🧵 fiber: generating schema, seed, and procs...");
       try {
-        await runPipeline();
+        await runSerialized();
         console.log("✓ fiber outputs generated");
       } catch (e) {
         // Fail the build loudly: stale generated files must not ship (or pass
@@ -82,8 +94,18 @@ export function fiberPlugin(options: FiberPluginOptions = {}): Plugin {
       server.watcher.add(paths.seedPath);
 
       const onSourceChange = async (file: string) => {
+        // Only regenerate for pipeline source inputs. Generated outputs and
+        // their temp files live inside the watched roots (procs.generated.ts,
+        // *.tmp-*), and re-running on those would loop forever.
+        if (
+          file !== paths.schemaPath &&
+          file !== paths.seedPath &&
+          basename(file) !== "procs.ts"
+        ) {
+          return;
+        }
         try {
-          await runPipeline();
+          await runSerialized();
           const procsFiles = await findProcsFiles(paths.procsDirs);
           invalidateModules(server, [
             paths.runtimeSchemaPath,
