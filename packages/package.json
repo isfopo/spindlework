@@ -19,6 +19,7 @@
     "hono",
     "framework",
     "jsx",
+    "tsx",
     "sql",
     "d1"
   ],
