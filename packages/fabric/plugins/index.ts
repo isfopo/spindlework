@@ -8,7 +8,7 @@
  */
 
 import type { Plugin, ViteDevServer } from "vite";
-import { basename } from "node:path";
+import { basename, dirname } from "node:path";
 import {
   buildCss,
   resolveCssPaths,

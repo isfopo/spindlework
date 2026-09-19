@@ -8,7 +8,7 @@
 
 import { dirname, join } from "path";
 import { createHash } from "node:crypto";
-import { writeFile, mkdir, unlink } from "node:fs/promises";
+import { writeFile, mkdir, unlink, rename } from "node:fs/promises";
 import { build as esbuild } from "esbuild";
 import { pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
@@ -59,11 +59,11 @@ export async function writeRuntimeSchema(
   schema: SchemaDef,
 ): Promise<void> {
   await mkdir(dirname(paths.runtimeSchemaPath), { recursive: true });
-  await writeFile(
-    paths.runtimeSchemaPath,
-    serializeSchemaDef(schema),
-    "utf-8",
-  );
+  // Write atomically: Vite may scan this module while it is being generated,
+  // and a half-written file would be read as empty / "no exports".
+  const tmpPath = `${paths.runtimeSchemaPath}.tmp-${process.pid}-${Date.now()}`;
+  await writeFile(tmpPath, serializeSchemaDef(schema), "utf-8");
+  await rename(tmpPath, paths.runtimeSchemaPath);
 }
 
 /**
