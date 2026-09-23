@@ -8,7 +8,7 @@
 
 import type { Plugin } from "vite";
 import { build, type BuildOptions } from "esbuild";
-import { dirname } from "path";
+import { dirname } from "node:path";
 import { mkdirSync } from "node:fs";
 
 export interface ThreadPluginOptions {

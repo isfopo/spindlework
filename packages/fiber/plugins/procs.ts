@@ -8,7 +8,7 @@
  * node-sql-parser (warnings only), and write the module atomically.
  */
 
-import { dirname, join, relative } from "path";
+import { dirname, join, relative } from "node:path";
 import { readdir, writeFile, mkdir, rename, unlink } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { build as esbuild } from "esbuild";

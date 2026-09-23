@@ -16,7 +16,7 @@
  */
 
 import type { Plugin, ViteDevServer } from "vite";
-import { basename } from "path";
+import { basename } from "node:path";
 import {
   loadSchemaModule,
   writeRuntimeSchema,

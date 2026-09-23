@@ -8,7 +8,7 @@
  * stays faker-free.
  */
 
-import { dirname, join } from "path";
+import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
 import { writeFile, mkdir, unlink, rename } from "node:fs/promises";
 import { build as esbuild } from "esbuild";

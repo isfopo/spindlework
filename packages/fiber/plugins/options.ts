@@ -1,4 +1,4 @@
-import { resolve } from "path";
+import { resolve } from "node:path";
 
 /** Options shared by the fiber data-layer generation (schema, seed, procs). */
 export interface FiberPluginOptions {
