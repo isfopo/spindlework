@@ -2,6 +2,7 @@
   "name": "tenet",
   "type": "module",
   "scripts": {
+    "predev": "node -e \"const t=()=>import('spindlework/plugins').then(()=>process.exit(0)).catch(()=>setTimeout(t,200));t()\"",
     "dev": "vite --host",
     "deploy": "npm run build && wrangler deploy",
     "build": "vite build",
@@ -12,7 +13,7 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "spindlework": "^0.0.0",
+    "spindlework": "*",
     "hono": "^4.13.7"
   },
   "devDependencies": {
