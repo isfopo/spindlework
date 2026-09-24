@@ -20,7 +20,7 @@
 
 import { Context, Env, Hono } from "hono";
 import { renderToString } from "hono/jsx/dom/server";
-import type { FC } from "hono/jsx";
+import type { Child, FC } from "hono/jsx";
 import { NotFoundError, ValidationError } from "./errors";
 import { parseRequestBody } from "./middleware/parseBody";
 import { GUARDS_KEY } from "./guards/GuardDecorator";
@@ -239,22 +239,21 @@ export abstract class ControllerBase<T extends Env> {
     /* Attach a renderer that wraps every response in the shared layout.
        This is inherited by all routes registered below. */
     this._app.use("*", async (c: Context, next) => {
-      c.setRenderer((content: any) => {
+      c.setRenderer((content: Child) => {
         const doctype = "<!DOCTYPE html>";
-        const Layout = this.renderConfig?.layout;
+        const Layout = this.renderConfig?.layout
+        const script = `<script>alert("hello world")</script>`
+
         if (!Layout) {
           return c.html(doctype + renderToString(content));
         }
-        // All values set via c.set() are spread as props into the Layout.
-        // This means middleware-set values (e.g., c.set("user", ...)) become
-        // layout props automatically. Avoid setting internal-only values
-        // via c.set() if they should not leak to the layout.
+
         const body = renderToString(
           <Layout {...c.var} currentPath={c.req.path}>
             {content}
           </Layout>,
         );
-        return c.html(doctype + body);
+        return c.html(doctype + body + script);
       });
       await next();
     });
