@@ -4,7 +4,7 @@
   "private": false,
   "type": "module",
   "license": "MIT",
-  "description": "TypeScript framework for Cloudflare Workers on Hono: server-rendered JSX views, a typed SQL/schema DSL, and declarative client handlers.",
+  "description": "TypeScript metaframework: server-rendered JSX views, a typed SQL/schema DSL, and declarative client handlers.",
   "author": {
     "name": "Isaac Poole",
     "email": "isaacpoolemusic@gmail.com"
